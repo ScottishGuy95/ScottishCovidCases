@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup as bs
 import requests
 from datetime import date
 import urllib.request
-import openpyxl
+from openpyxl import *
 import os
 import sys
 import shutil
@@ -96,12 +96,28 @@ today = getFormattedDate()      # Gets the date in a URL format to add to the so
 # TODO: Find a better way to format this URL in the IDE to stop it complaining
 fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true"
 
+# data_only ensures we only get cell values, not formulas
+excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
+
 
 # Code
 # Start by checking if the file is available
 print("Starting!")
 getFile(fileURL, newestFile)
-# # TODO: File management, how to handle all the older files?
+# TODO: File management, how to handle all the older files? Should be done at this stage
 
+# Get the correct sheet from the Excel file
+for theSheet in range(len(excel.sheetnames)):
+    if excel.sheetnames[theSheet] == 'Table 1 - Cumulative cases':
+        excel.active = theSheet
+sheet = excel.active        # Set the active sheet
+
+# Loop through all the rows of data, finding the most recent one
+newRow = ''
+for row in range(1, sheet.max_row+1):
+    cell = sheet.cell(row=row, column=1)
+    if cell.value is None:
+        newRow = cell.row
+print(newRow)
 
 # TODO: Is this needed? urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
