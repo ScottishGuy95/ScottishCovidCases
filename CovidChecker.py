@@ -12,7 +12,9 @@
 from datetime import date
 import urllib.request
 import openpyxl
-# import os # TODO is this needed? Could be used to check if file exists in directory
+import os
+import sys
+import shutil
 
 
 # Functions
@@ -34,21 +36,27 @@ def getFormattedDate(formatted=True):
 
 # Downloads a file from the given URL
 def getFile(url):
-    # TODO - Download the file and set the name that comes from the file online
-    # If the file is not available, post a msg saying that and end
-    # If a file is available, check its filename - if it already exists in the dir, post a msg saying that and use the already existing file
-    # If the file available has a more recent date, download that and use it
-    # If the file online already exists in the dl dir, msg saying - already got recent data, and use that data
-    
-    # Only shows starting URL for clarity, as URL is rather large
+    # TODO - How to manage older files?
     print("Downloading the most recent data from the " + fileURL[:20] + " website")
+
     # TODO - Change download location to a temp folder? To allow the file to be deleted after use
-    try:
-        urllib.request.urlretrieve(url, 'COVID-' + getFormattedDate(False) + '.xlsx')   # Downloads to the same directory as the python file
-    except urllib.error.URLError:
-        print("Error! The given URL is incorrect, please check the URL")
-        print("URL Given - " + url)
-    print("File downloaded!")
+    # There are python modules for making temp files/dirs
+
+    downloadName = 'COVID-' + getFormattedDate(False) + '.xlsx'
+
+    # Check if a file with that name already exists, if not, download a fresh copy
+    if downloadName in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
+        print('A file with today\'s date already exists, using that.')
+    else:
+        try:
+            urllib.request.urlretrieve(url, downloadName)   # Downloads to the same directory as the python file
+        except urllib.error.URLError:
+            print("Error! The given URL is incorrect, please check the URL")
+            print("URL Given - " + url)
+            print('Ending program.')
+            sys.exit()
+        print("File downloaded!")
+        shutil.move(downloadName, 'ExcelFiles')
 
 
 # Variables
@@ -60,7 +68,9 @@ fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/s
 # Code
 # Start by checking if the file is available
 print("Starting!")
-print(fileURL)
 getFile(fileURL)
+
+# Check if a file exists - there should only be 1!
+
 
 # urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
