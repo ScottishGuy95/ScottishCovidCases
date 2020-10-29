@@ -90,21 +90,70 @@ def getFileNameFromLinks():
         print('Error! Found no file to download. Please check the URL has a valid file to download.\nIt is possible the file name has changed.')
 
 
+def getLastRow(sheet):
+    # Loop through all the rows of data, finding the most recent one
+    lastRow = ''
+    for row in range(4, sheet.max_row + 1):
+        cell = sheet.cell(row=row, column=1)
+        if not cell.is_date:
+            lastRow = cell.row - 1
+            break
+    return lastRow
+
+
+def printNewest(lastRow):
+    printLocations()
+    for col in range(2, 17):
+        cell = sheet.cell(row=lastRow, column=col)
+        if col == 1:
+            print(str(cell.value)[:10] + ' | ', end='')
+        else:
+            print(str(cell.value) + ' | ', end='')
+
+
+def getNewest(lastRow):
+    newCasesList = []
+    for col in range(2, 17):
+        cell = sheet.cell(row=lastRow, column=col)
+        newCasesList.append(str(cell.value))
+    return newCasesList
+
+
+def printLocations():
+    for col in range(2, 17):
+        cell = sheet.cell(row=3, column=col)
+        print(str(cell.value) + ' | ', end='')
+    print()
+
+
+def getLocations():
+    locationsList = []
+    for col in range(2, 17):
+        cell = sheet.cell(row=3, column=col)
+        locationsList.append(str(cell.value))
+    return locationsList
+
+
+def printNewCases(locations, cases, newestDate):
+    print('Cases from - ' + newestDate)
+    for x in range(len(locations)):
+        print(locations[x] + ' | ' + cases[x])
+
 # Variables
 newestFile = getFileNameFromLinks()
 today = getFormattedDate()      # Gets the date in a URL format to add to the source file URL
 # TODO: Find a better way to format this URL in the IDE to stop it complaining
 fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true"
+columnLtr = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
+lastColLtr = columnLtr[-1]
+lastColNum = 16
 
-# data_only ensures we only get cell values, not formulas
-excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
 
-
-# Code
 # Start by checking if the file is available
 print("Starting!")
 getFile(fileURL, newestFile)
 # TODO: File management, how to handle all the older files? Should be done at this stage
+excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
 
 # Get the correct sheet from the Excel file
 for theSheet in range(len(excel.sheetnames)):
@@ -112,12 +161,13 @@ for theSheet in range(len(excel.sheetnames)):
         excel.active = theSheet
 sheet = excel.active        # Set the active sheet
 
-# Loop through all the rows of data, finding the most recent one
-newRow = ''
-for row in range(1, sheet.max_row+1):
-    cell = sheet.cell(row=row, column=1)
-    if cell.value is None:
-        newRow = cell.row
-print(newRow)
+# Store the last row number
+lastRow = getLastRow(sheet)
+newestDate = sheet.cell(row=lastRow, column=1)
+newestDate = str(newestDate.value)[:10]
+
+# Prints all of the new cases from the most recent value
+# printNewCases(getLocations(), getNewest(lastRow), newestDate)
 
 # TODO: Is this needed? urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
+# last = sheet.cell(row=lastRow, column=16)
