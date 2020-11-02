@@ -121,7 +121,6 @@ def getLastRowNumber(sheet):
             # Last row is blank, so go back one row to get the actual last row of data
             lastRow = cell.row - 1
             break
-    print(type(lastRow))
     return lastRow                  # Retuns the row number as a String
 
 
@@ -233,14 +232,17 @@ today = getFormattedDate()              # Gets the date in a URL format to add t
 fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid" \
           "-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
           "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
+
 # A list of letters representing the columns used in the Excel file
 columnLtr = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
 lastColLtr = columnLtr[-1]              # The last column letter stored as a String
 lastColNum = 16                         # The column number of the last letter
+
 # Shorter versions of each of possible locations - Saves typing in the full name for users convience
 quickNames = ['ayrshire', 'arran', 'ayrshire & arran', 'borders', 'dumfries', 'galloway', 'gife', 'forth', 'valley',
               'forth valley', 'grampian', 'greater glasgow', 'greater glasgow & clyde', 'glasgow', 'clyde', 'highland',
               'lLanarkshire', 'lothian', 'orkney', 'shetland', 'tayside', 'western isles', 'scotland']
+
 
 # Start by checking if the file is available
 print("Starting!")
@@ -298,8 +300,8 @@ def testALL():
     print()
     printAllTotals(getLocations(), getNewestCases(lastRow))
 
-printNewestCasesOnly(getLastRowNumber(sheet))
 
+print('\nEnding before checking CMD input')
 sys.exit()
 
 if str(sys.argv[1]).lower() == 'today':
