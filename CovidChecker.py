@@ -5,11 +5,8 @@
 # TODO: Setup a -h or help option to get details on how to use the program
 # TODO: Remove unnecessary prints from WHOLE program
 # TODO: Program needs an internet connection (for now, change in future version if I can)
-#  IF there is no already existing excel file to use - download a fresh version.
 #  So it should start, check for a file, if no file exists, try to get a fresh file. If it fails, let exception handle.
 #  If there is a file, but its not with today's date, try to get a fresh file, if fails, exception handles it.
-#  If there is a file and you cant get a new file, post a message and just use older data
-#  If there is a file and its with today's date, use that!
 # pip installs
 # bs4, requests, openpyxl, send2trash
 
@@ -23,16 +20,15 @@ import os
 import sys
 import shutil
 from send2trash import send2trash
+import argparse
 
 
 # Functions
 def getFormattedDate(formatted=True):
     """
-    Returns the data in one of 2 formatted options.
-    Parameters:
-        formatted (Boolean): True returns the data as expected for a URL, otherwise returns DDMMYY
-    Return:
-        dateStr (str): A str representing the formatted date - e.g. 25October2020
+    Returns the date in a specified format, depending on parameters
+    :param formatted: If True, returns the data formatted for a URL, otherwise its just DDMonthYYYY
+    :return: (str): A String representing the formatted data
     """
     # Get date in DDMMYYYY format
     today = date.today()  # Create an object to get the date details
@@ -49,12 +45,11 @@ def getFormattedDate(formatted=True):
     return dateStr
 
 
-def getFile(url, file):
+def downloadData(url, file):
     """
-    Downloads a file from the given URL
-    Parameters:
-        url (str): The URL of the Scottish Govs covid data website
-        file (str): The name of the file to look for on the Scottish Gov website
+    Downloads the latest excel file of Scottish Covid cases from the given URL
+    :param url: (str): The URL of the Scottish Gov Covid Cases website
+    :param file: (str; The name of the file to check for
     """
     # Check if a file with that name already exists, if not, download a fresh copy
     # Uses the os module to check the name of the file to download, against all the files in the ExcelFiles directory
@@ -63,7 +58,6 @@ def getFile(url, file):
     else:
         try:
             # Attempts to use the urllib module to download the given file from the Scot Gov website
-            print('Downloading the new data')
             urllib.request.urlretrieve(url, file)  # Downloads to the same directory as the python file
         # If there is an issue with the given URL, display an error, the given URL and end the program
         except urllib.error.URLError:
@@ -71,17 +65,16 @@ def getFile(url, file):
             print("URL Given: " + url)
             print('Ending program as no data available to analyse')
             sys.exit()  # Ends the program as the URL failed, so no data available
-        print("File downloaded!")
+        print("Local data matches most recently available data")
         # Move the newly downloaded file into the correct directory
         # TODO: Add some sort of error in case moving the file returns an error
         shutil.move(newestFile, 'ExcelFiles')
 
 
-def getAllLinks():
+def getURLs():
     """
-    Scans a web page for all URLs, returning them in a list
-    Return:
-        links (list): A list of all the URLs found on the Scot Gov COVID-19 data website
+    Scans a web page for all URLs
+    :return: (list); A list of all of the URLS from the Scottish Gov Covid page
     """
     # The website that hosts the files
     url = 'https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/'
@@ -96,13 +89,12 @@ def getAllLinks():
     return links
 
 
-def getFileNameFromLinks():
+def formatFileName():
     """
-    Returns a String to be used as the file name, for the downloaded file
-    Return:
-        filename (str): A name based of the currently available COVID-19 file on the Scot Gob website
+    Gets the name of the covid data sheet and formats it to rename the exhcel sheet when its downloaded
+    :return: (str): A String to name the downloaded excel sheet of covid data
     """
-    links = getAllLinks()  # Get a list of URLs to search through for the Excel file
+    links = getURLs()  # Get a list of URLs to search through for the Excel file
     fileName = ''  # The intended filename for the download object
 
     try:
@@ -129,24 +121,10 @@ def getFileNameFromLinks():
         sys.exit()
 
 
-# ------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------
-
-# A function to handle outputting error messages for each function
-# Did this to avoid having similar ending statements in each function
-# TODO: Use this for now, but I do need to add proper error handling throughout the program
-#  Meaning this WILL be deleted at the end!
-def endIt(errorMsg):
-    print(errorMsg)
-    print('Ending the program')
-    sys.exit()
-
-
 def getHealthBoardList():
     """
-    Returns a list of each Health Boards names, according to the column data in the Excel sheet
-    Return:
-        healthBoardsList (list): A list of each Health Boards name
+    Reads the covid data and returns all of the health boards
+    :return: (list): A list of each Health Board name as a Strings
     """
     healthBoardsList = []                           # Used to store all the health board names
     # Loops from the first available health board name (col 2) to the last health board name (col 16)
@@ -156,11 +134,10 @@ def getHealthBoardList():
     return healthBoardsList
 
 
-def getNewDataFromAllBoards():
+def getNewest():
     """
-    Returns the most recent case totals for each health board
-    Returns:
-        newDataList (list): A list of each health boards case totals
+    Reads the covid data and returns the total cases for all health boards
+    :return: (list): A list of each health boards covid numbers
     """
     newDataList = []                                        # The list to store the case values
     for col in range(2, 17):                                # Loop each health board area & Scottish total
@@ -169,36 +146,31 @@ def getNewDataFromAllBoards():
     return newDataList                                      # Returns all the case values in the list
 
 
-def getNewScotlandTotal():
+def getScotlandTotal():
     """
-    Returns the Scottish total cases from the Excel data
-    Return:
-        (int): Total cases in Scotland
+    Reads the covid data to find the total cases for Scotland
+    :return: (str): The total cases in Scotland as a String
     """
     # Reads the last column of data, on the last row of data, and returns that cells value
     return sheet.cell(row=sheet.max_row, column=16).value
 
 
-def getSpecificHealthBoardNewCases(healthBoard):
+def getHealthBoardTotal(healthBoard):
     """
-    Takes a Health Boards full name, and returns its total cases
-    Parameters:
-        healthBoard (str): The name of the health board (Should match that of the Excel sheet)
-    Return:
-        (int): The data from the column for the given health board
+    Takes a health boards name, returning its total cases
+    :param healthBoard: (str): The name of the health board to check for
+    :return: (str): The number of cases from the excel sheet
     """
     columnNum = getHealthBoardColumnNum(healthBoard)    # Gets the column number, for the given health board
-    newData = getNewDataFromAllBoards()                 # Stores all of the newest available total cases in a list
+    newData = getNewest()                 # Stores all of the newest available total cases in a list
     return newData[columnNum]                   # From the list of data, select the element from the given column num
 
 
 def getHealthBoardColumnNum(healthBoard):
     """
-    Takes a health boards full name, and returns the column number from the Excel sheet
-    Parameters:
-        healthBoard (str): The name of the health board (Should match that of the Excel sheet)
-    Return:
-        (int): The column number of the health board
+    Takes the health board name, returning its column number
+    :param healthBoard: (str): The name of the health board
+    :return: (int): The column number from the excel sheet
     """
     for col in range(2, 17):            # Loops all of the columns of health boards
         if sheet.cell(row=3, column=col).value == healthBoard:  # Check if the current health board matches the request
@@ -207,17 +179,13 @@ def getHealthBoardColumnNum(healthBoard):
             return col - 2              # Returns the column number
 
 
-def getHealthBoardCasesOverPeriod(timePeriod, healthBoard='all'):
+def getHealthBoardPeriod(timePeriod, healthBoard='all'):
     """
-    Returns case numbers over a given period, for either all health boards or the specifically requested health board
-    Parameters:
-        timePeriod (int): A number representing how many days of data to look back over
-        healthBoard (str): The name of health board, or 'all' or blank, to get every health board
-    Return:
-        healthBoardList (list): A list for each health boards cases over the requested period
-        (int): The value for the cases over the requested time period
+    Reads the covid data for the health boards covid cases, over the given period
+    :param healthBoard: (str): The name of the health board to check data for. Use 'all' to get all health boards cases
+    :param timePeriod: (int): The amount of days of data to check back for
+    :return: (list): A list of the cases from either all health boards or the specifically requested one
     """
-
     # 39 was selected due to formatting in the Gov file
     # When cases were less than 5, as '*' was displayed, for disclosure reasons
     # So, to avoid a ValueError, 39 was the first row of data to not have an *
@@ -229,8 +197,7 @@ def getHealthBoardCasesOverPeriod(timePeriod, healthBoard='all'):
         print('ERROR: You must give a number between 1 and ' + str(max) + '\nEnding Program.')
         sys.exit()
     if int(length) < 1 or int(length) > max:
-        errorMsg = 'ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(max)
-        endIt(errorMsg)
+        print('ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(max))
 
     if healthBoard == 'all':
         print('Getting all health boards cases over ' + str(length) + ' days')  # TODO Remove this after list handling
@@ -251,41 +218,31 @@ def getHealthBoardCasesOverPeriod(timePeriod, healthBoard='all'):
 
 
 def outputHandler(locations, values):
+    """
+    Ouputs the health board and case numbers in a tabulated list
+    :param locations: (list or str): A list of all health boards or a single health board
+    :param values: (str): The number of cases for the health board(s)
+    """
+    # Checks if there is a list of health boards or just a single health board
     if type(locations) == list and type(values) == list:
-        print('Received a list, so it should be ALL health boards')
-        maxLenElement = max(locations, key=len)
+        print('Received a list, so it should be ALL health boards')     # TODO: Remove these prints
+        maxLenElement = max(locations, key=len)                         # Store the longest element from the list
         for x in range(len(locations)):
+            # Take the current items length, remove it from the length of the longest element, add 2 for the clarity
             spacing = ' ' * (len(maxLenElement) - len(locations[x]) + 2)
             print(locations[x] + spacing + ' | ' + str(values[x]))
-
     elif type(locations) == str and type(values) == int:
         print('Received a str, so it will just be a single health board')
-        print(locations + '\t|\t' + str(values))
+        print(locations + '\t|\t' + str(values))                        # Tab twice to add some space between values
 
 
-# ------------------------------------------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------------------------------------------
-
-# Reads the list of health boards and returns them in a list or prints them
-# Depending if printIt is True or not
-def getHealthBoardsList(printIt=False):
-    locationsList = []  # Used to store the health board names
-    for col in range(2, 17):  # Loop columns A - P
-        cell = sheet.cell(row=3, column=col)  # Grab the cell from the current column per increment
-        if not printIt:  # Not printing to console, so append the cells value to the list
-            locationsList.append(str(cell.value))
-        else:
-            print(str(cell.value) + ' | ', end='')  # Print each cell value as a String, without a new line
-    if not printIt:  # Not printing to console, so return the list
-        return locationsList
-    else:
-        print()  # Print to get to a fresh line after using end=''
-
-
-# Takes a health board name, and returns the exact spelling/format of that health board
-# Used to allow more user friendly input of names - e.g. Grampian becomes NHS Grampian
-# Expects a name to check for and a list of locations to compare against
 def getHealthBoardFullName(location):
+    """
+    Takes user inputted health board name, converting it into the name as it appears in the covid data excel sheet
+    User input: Grampian, returns NHS Grampian
+    :param location: (str): The health board name that
+    :return: (str): The official name of the health board
+    """
     locationsList = getHealthBoardList()
     healthBoardNameFull = ''                        # Stores the health board name
     for x in range(len(locationsList)):             # Loops the entire list of health boards
@@ -293,47 +250,34 @@ def getHealthBoardFullName(location):
             healthBoardNameFull = locationsList[x]  # Store that full health board name in a variable
     if healthBoardNameFull == '':                   # If there is no match, print error, print valid names and end
         print('Error - Invalid name given, please enter a name that matches one of the following:')
-        print(getHealthBoardsList(printIt=True))           # Prints the health board names
+        print(getHealthBoardList())                 # Prints the health board names
         print('Ending program')
         sys.exit()                                  # Uses the sys package to end the program, as no valid name given
     elif healthBoardNameFull in locationsList:      # If there is a matching name in the location list, return as String
         return healthBoardNameFull
 
-
-# Code
-# TODO: Set up error checking for all possible arguments
-# if len(sys.argv) < 1:
-#     print('Usage: CovidChecker.py [Location]')
-#     print('Example: CovidChecker.py Highland')
-#     sys.exit()
-# else:
-#     requestedLocation = sys.argv[1]
-#     print('User asking for data on - ' + requestedLocation)
+# TODO; Set up argparse
 
 
-newestFile = getFileNameFromLinks()     # Stores the expected file name from the website
-today = getFormattedDate()              # Gets the date in a URL format to add to the source file URL
+newestFile = formatFileName()  # Stores the expected file name from the website
+today = getFormattedDate()  # Gets the date in a URL format to add to the source file URL
 # The URL of where the most recent file will be
-fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus-covid" \
-          "-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
-          "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
+fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus" \
+              "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
+              "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
 
-# Start by checking if the file is available
-print("Checking for new data...")
-getFile(fileURL, newestFile)    # Downloads newest file is available or uses older file
+# A file with the most recent data does not already exist
+if newestFile not in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
+    print('Local covid data is out of date - Downloading recent data.')
+    downloadData(fileURL, newestFile)    # Downloads newest file is available or uses older file
 
 # File management - Clear out any other older files
-print('Checking if there are any old files to clear...')
 count = 0
 for theFile in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
     if theFile != newestFile:
         count += 1
         # print('need to bin this file: ' + str(os.getcwd() + '\\ExcelFiles\\' + theFile))
         send2trash(os.getcwd() + '\\ExcelFiles\\' + theFile)
-if count >= 1:
-    print('Deleted ' + str(count) + ' files.')
-else:
-    print('No files to clear.')
 
 # Loads the most recent excel file, data_only used to ignore any formulas, as we only need the actual values
 excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
@@ -342,29 +286,10 @@ excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
 for theSheet in range(len(excel.sheetnames)):
     if excel.sheetnames[theSheet] == 'Table 1 - Cumulative cases':
         excel.active = theSheet             # The active sheet is used to access the sheets data
-sheet = excel.active                        # Stores the active sheet in a usable variable
+sheet = excel.active
 
 lastRowNum = sheet.max_row
 newestDate = sheet.cell(row=lastRowNum, column=1)  # Get the data of the most available row of data
-newestDate = str(newestDate.value)[:10]         # Remove the end of the String, as it stores an unusable time value
 
-
-def testALL():
-    return None
-
-
-# outputHandler(getHealthBoardFullName('Grampian'), getSpecificHealthBoardNewCases(getHealthBoardFullName('Grampian')))
-# print()
-# outputHandler(getHealthBoardList(), getHealthBoardCasesOverPeriod(19))
-
-print(getHealthBoardCasesOverPeriod.__doc__)
-
-print('\nEnding before checking CMD input')
-sys.exit()
-
-if str(sys.argv[1]).lower() == 'today':
-    # if str(sys.argv[2]).lower() in quickNames:
-    #     print('checking todays values for ' + getHealthBoardFullName(str(sys.argv[2])))
-    printLocationsAndValues(getNewTodayAll())
-
+print(' ---- Scottish Covid Case Checker ---- ')
 # TODO: Is this needed? urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
