@@ -2,14 +2,6 @@
 # CovidChecker.py - A program to check the new coronavirus cases in Scotland
 # Data is taken from - https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 
-# TODO: Setup a -h or help option to get details on how to use the program
-# TODO: Remove unnecessary prints from WHOLE program
-# TODO: Program needs an internet connection (for now, change in future version if I can)
-#  So it should start, check for a file, if no file exists, try to get a fresh file. If it fails, let exception handle.
-#  If there is a file, but its not with today's date, try to get a fresh file, if fails, exception handles it.
-# pip installs
-# bs4, requests, openpyxl, send2trash
-
 # Imports
 from bs4 import BeautifulSoup as bs
 import requests
@@ -67,7 +59,6 @@ def downloadData(url, file):
             sys.exit()  # Ends the program as the URL failed, so no data available
         print("Local data matches most recently available data")
         # Move the newly downloaded file into the correct directory
-        # TODO: Add some sort of error in case moving the file returns an error
         shutil.move(newestFile, 'ExcelFiles')
 
 
@@ -141,7 +132,7 @@ def getNewest():
     """
     newDataList = []  # The list to store the case values
     for col in range(2, 17):  # Loop each health board area & Scottish total
-        cell = sheet.cell(row=sheet.max_row, column=col)  # Store the cell for the current health board on the row
+        cell = sheet.cell(row=lastRowNum, column=col)  # Store the cell for the current health board on the row
         newDataList.append(cell.value)  # Get the data for that cell  (stores case numbers)
     return newDataList  # Returns all the case values in the list
 
@@ -152,7 +143,7 @@ def getScotlandTotal():
     :return: (str): The total cases in Scotland as a String
     """
     # Reads the last column of data, on the last row of data, and returns that cells value
-    return sheet.cell(row=sheet.max_row, column=16).value
+    return sheet.cell(row=lastRowNum, column=16).value
 
 
 def getHealthBoardTotal(healthBoard):
@@ -189,8 +180,7 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
     # 39 was selected due to formatting in the Gov file
     # When cases were less than 5, as '*' was displayed, for disclosure reasons
     # So, to avoid a ValueError, 39 was the first row of data to not have an *
-    # TODO: Find a way to accommodate the asterix value
-    max = sheet.max_row - 39
+    max = lastRowNum - 39
     try:
         length = int(timePeriod)
     except:
@@ -200,24 +190,22 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
         print('ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(max))
 
     if healthBoard == 'all':
-        print('Getting all health boards cases over ' + str(length) + ' days')  # TODO Remove this after list handling
+        print('Getting all health boards cases over ' + str(length) + ' days')
         healthBoardList = []
         for col in range(2, 17):
-            newCell = sheet.cell(row=sheet.max_row, column=col).value
-            olderCell = sheet.cell(row=sheet.max_row - length, column=col).value
+            newCell = sheet.cell(row=lastRowNum, column=col).value
+            olderCell = sheet.cell(row=lastRowNum - length, column=col).value
             data = newCell - olderCell
             healthBoardList.append(data)
         return healthBoardList
     else:
-        healthBoard = getHealthBoardFullName(healthBoard)
-        print('Getting the last ' + str(length) + ' days of cases for ' + healthBoard)  # TODO Remove after CMD handling
+        print('Getting the last ' + str(length) + ' days of cases for ' + healthBoard)
         healthBoardColNum = getHealthBoardColumnNum(healthBoard)
-        newCell = sheet.cell(row=sheet.max_row, column=healthBoardColNum).value
-        olderCell = sheet.cell(row=sheet.max_row - length, column=healthBoardColNum).value
+        newCell = sheet.cell(row=lastRowNum, column=healthBoardColNum).value
+        olderCell = sheet.cell(row=lastRowNum - length, column=healthBoardColNum).value
         return newCell - olderCell
 
 
-# TODO: Add a way to sort by most at top or...?
 def outputData(locations, values):
     """
     Ouputs the health board and case numbers in a tabulated list
@@ -246,15 +234,14 @@ def getHealthBoardFullName(location):
     healthBoardNameFull = ''  # Stores the health board name
     if valid:
         locationsList = getHealthBoardList()
-        # TODO: Check for the given word in each word from locationstList[x], not just if its in locationList[x]
-        # TODO: Dont all user to enter '&' or just 'NHS'
-        # TODO: 'all' option for CLI should be handled by the CLI input if block, not here
         for x in range(len(locationsList)):  # Loops the entire list of health boards
             splitLocation = locationsList[x].split()
             for y in range(len(splitLocation)):
                 if location.lower() == splitLocation[y].lower():
                     healthBoardNameFull = locationsList[x]
                     break
+            if healthBoardNameFull != '':   # Escapes the FOR loop, as there is now a health board name
+                break
             # if location.lower() in locationsList[x].lower():  # If the given finds a match in the list of locations
             #     healthBoardNameFull = locationsList[x]  # Store that full health board name in a variable
             #     break
@@ -294,10 +281,14 @@ fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/s
           "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
           "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
 
+# Checks if their is a suitable directory to store the Excel files, if not, makes one
+if 'ExcelFiles' not in os.listdir(os.getcwd()):
+    os.mkdir(os.getcwd() + '/ExcelFiles')
 # A file with the most recent data does not already exist
 if newestFile not in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
     print('Local covid data is out of date - Downloading recent data.')
     downloadData(fileURL, newestFile)  # Downloads newest file is available or uses older file
+    urllib.request.urlcleanup()
 
 # File management - Clear out any other older files
 count = 0
@@ -316,8 +307,12 @@ for theSheet in range(len(excel.sheetnames)):
         excel.active = theSheet  # The active sheet is used to access the sheets data
 sheet = excel.active
 
-lastRowNum = sheet.max_row
-newestDate = sheet.cell(row=lastRowNum, column=1)  # Get the data of the most available row of data
+# Sometimes the sheet comes back with the last row, as the one after the last line of actual data
+# So, instead of using sheet.max_row, loop from the last row, until the first row of actual data, store that row number
+lastEmptyRow = sheet.max_row
+while sheet.cell(row=lastEmptyRow, column=1).value is None:
+    lastEmptyRow -= 1
+lastRowNum = lastEmptyRow
 
 # A message to display during certain CLI arguments
 intro = '\n---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid data and returns specific case numbers\n'
@@ -341,11 +336,12 @@ elif args.area is not None:
 elif args.cases is not None:
     # Takes the given area, converts to Excel formatted health board name and checks the given days from cases[0]
     print(intro)
-    area = getHealthBoardFullName(str(args.cases[1]))
-    if area in getHealthBoardList():
+    if args.cases[1] != 'all':
+        area = getHealthBoardFullName(str(args.cases[1]))
         outputData(area, getHealthBoardPeriod(args.cases[0], area))
-    # TODO: Currently cant handle 'all', this is an issue with getHealthBoardFullName,
-    #  as it currently looks for any evidence of the given string, rather than comparing word for word
+    else:
+        area = 'all'
+        outputData(getHealthBoardList(), getHealthBoardPeriod(args.cases[0], 'all'))
 elif args.total is True:
     # Prints all health boards and all of the total case numbers
     print(intro)
@@ -354,5 +350,3 @@ elif args.total is True:
 else:
     # Invalid argument selected, showing the user -h
     parser.print_help()
-
-# TODO: Is this needed? urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
