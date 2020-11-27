@@ -126,11 +126,11 @@ def getHealthBoardList():
     Reads the covid data and returns all of the health boards
     :return: (list): A list of each Health Board name as a Strings
     """
-    healthBoardsList = []                           # Used to store all the health board names
+    healthBoardsList = []  # Used to store all the health board names
     # Loops from the first available health board name (col 2) to the last health board name (col 16)
     for row in sheet.iter_rows(min_row=3, min_col=2, max_row=3, max_col=16):
-        for cell in row:                            # Get the cell of the iteration
-            healthBoardsList.append(cell.value)     # Add the health board name to the list
+        for cell in row:  # Get the cell of the iteration
+            healthBoardsList.append(cell.value)  # Add the health board name to the list
     return healthBoardsList
 
 
@@ -139,11 +139,11 @@ def getNewest():
     Reads the covid data and returns the total cases for all health boards
     :return: (list): A list of each health boards covid numbers
     """
-    newDataList = []                                        # The list to store the case values
-    for col in range(2, 17):                                # Loop each health board area & Scottish total
-        cell = sheet.cell(row=sheet.max_row, column=col)    # Store the cell for the current health board on the row
-        newDataList.append(cell.value)                      # Get the data for that cell  (stores case numbers)
-    return newDataList                                      # Returns all the case values in the list
+    newDataList = []  # The list to store the case values
+    for col in range(2, 17):  # Loop each health board area & Scottish total
+        cell = sheet.cell(row=sheet.max_row, column=col)  # Store the cell for the current health board on the row
+        newDataList.append(cell.value)  # Get the data for that cell  (stores case numbers)
+    return newDataList  # Returns all the case values in the list
 
 
 def getScotlandTotal():
@@ -161,9 +161,9 @@ def getHealthBoardTotal(healthBoard):
     :param healthBoard: (str): The name of the health board to check for
     :return: (str): The number of cases from the excel sheet
     """
-    columnNum = getHealthBoardColumnNum(healthBoard)    # Gets the column number, for the given health board
-    newData = getNewest()                 # Stores all of the newest available total cases in a list
-    return newData[columnNum]                   # From the list of data, select the element from the given column num
+    columnNum = getHealthBoardColumnNum(healthBoard)  # Gets the column number, for the given health board
+    newData = getNewest()  # Stores all of the newest available total cases in a list
+    return newData[columnNum - 2]  # From the list of data, select the element from the given column num
 
 
 def getHealthBoardColumnNum(healthBoard):
@@ -172,11 +172,11 @@ def getHealthBoardColumnNum(healthBoard):
     :param healthBoard: (str): The name of the health board
     :return: (int): The column number from the excel sheet
     """
-    for col in range(2, 17):            # Loops all of the columns of health boards
+    for col in range(2, 17):  # Loops all of the columns of health boards
         if sheet.cell(row=3, column=col).value == healthBoard:  # Check if the current health board matches the request
             # Remove 2 from the column number, as the column in excel, starts at 2
             # so removing 2 the first element back to 1, so it becomes the 'first' column again
-            return col - 2              # Returns the column number
+            return col  # Returns the column number
 
 
 def getHealthBoardPeriod(timePeriod, healthBoard='all'):
@@ -217,7 +217,8 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
         return newCell - olderCell
 
 
-def outputHandler(locations, values):
+# TODO: Add a way to sort by most at top or...?
+def outputData(locations, values):
     """
     Ouputs the health board and case numbers in a tabulated list
     :param locations: (list or str): A list of all health boards or a single health board
@@ -225,15 +226,13 @@ def outputHandler(locations, values):
     """
     # Checks if there is a list of health boards or just a single health board
     if type(locations) == list and type(values) == list:
-        print('Received a list, so it should be ALL health boards')     # TODO: Remove these prints
-        maxLenElement = max(locations, key=len)                         # Store the longest element from the list
+        maxLenElement = max(locations, key=len)  # Store the longest element from the list
         for x in range(len(locations)):
             # Take the current items length, remove it from the length of the longest element, add 2 for the clarity
             spacing = ' ' * (len(maxLenElement) - len(locations[x]) + 2)
             print(locations[x] + spacing + ' | ' + str(values[x]))
     elif type(locations) == str and type(values) == int:
-        print('Received a str, so it will just be a single health board')
-        print(locations + '\t|\t' + str(values))                        # Tab twice to add some space between values
+        print(locations + '\t|\t' + str(values))  # Tab twice to add some space between values
 
 
 def getHealthBoardFullName(location):
@@ -243,33 +242,62 @@ def getHealthBoardFullName(location):
     :param location: (str): The health board name that
     :return: (str): The official name of the health board
     """
-    locationsList = getHealthBoardList()
-    healthBoardNameFull = ''                        # Stores the health board name
-    for x in range(len(locationsList)):             # Loops the entire list of health boards
-        if location.lower() in locationsList[x].lower():    # If the given finds a match in the list of locations
-            healthBoardNameFull = locationsList[x]  # Store that full health board name in a variable
-    if healthBoardNameFull == '':                   # If there is no match, print error, print valid names and end
+    valid = True
+    healthBoardNameFull = ''  # Stores the health board name
+    if valid:
+        locationsList = getHealthBoardList()
+        # TODO: Check for the given word in each word from locationstList[x], not just if its in locationList[x]
+        # TODO: Dont all user to enter '&' or just 'NHS'
+        # TODO: 'all' option for CLI should be handled by the CLI input if block, not here
+        for x in range(len(locationsList)):  # Loops the entire list of health boards
+            splitLocation = locationsList[x].split()
+            for y in range(len(splitLocation)):
+                if location.lower() == splitLocation[y].lower():
+                    healthBoardNameFull = locationsList[x]
+                    break
+            # if location.lower() in locationsList[x].lower():  # If the given finds a match in the list of locations
+            #     healthBoardNameFull = locationsList[x]  # Store that full health board name in a variable
+            #     break
+    if healthBoardNameFull == '':  # If there is no match, print error, print valid names and end
         print('Error - Invalid name given, please enter a name that matches one of the following:')
-        print(getHealthBoardList())                 # Prints the health board names
+        print(getHealthBoardList())  # Prints the health board names
         print('Ending program')
-        sys.exit()                                  # Uses the sys package to end the program, as no valid name given
-    elif healthBoardNameFull in locationsList:      # If there is a matching name in the location list, return as String
+        sys.exit()  # Uses the sys package to end the program, as no valid name given
+    elif healthBoardNameFull in locationsList:  # If there is a matching name in the location list, return as String
         return healthBoardNameFull
 
-# TODO; Set up argparse
 
+# argparse variables
+parser = argparse.ArgumentParser(prog=os.path.basename(__file__), usage='%(prog)s [option]',
+                                 description='---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid data '
+                                             'and returns specific case numbers',
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-n', '--new', required=False, action='store_true', help="Expects health board name or "
+                                                                            "\'all\' for today's cases")
+group.add_argument('-s', '--scotland', required=False, action='store_true',
+                   help="Returns the Scottish total amount of cases")
+group.add_argument('-a', '--area', required=False, nargs=1, help="Expects a health board name, returns that health "
+                                                                 "boards total cases",
+                   metavar='HEALTHBOARD')
+group.add_argument('-c', '--cases', required=False, nargs=2, help="Expects a time period to check for cases and a "
+                                                                  "health board or \'all\' for all health boards",
+                   metavar=('DAYS', 'HEALTHBOARD'))
+group.add_argument('-t', '--total', required=False, action='store_true',
+                   help="Returns all health boards total case numbers")
+args = parser.parse_args()
 
 newestFile = formatFileName()  # Stores the expected file name from the website
 today = getFormattedDate()  # Gets the date in a URL format to add to the source file URL
 # The URL of where the most recent file will be
 fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus" \
-              "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
-              "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
+          "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
+          "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
 
 # A file with the most recent data does not already exist
 if newestFile not in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
     print('Local covid data is out of date - Downloading recent data.')
-    downloadData(fileURL, newestFile)    # Downloads newest file is available or uses older file
+    downloadData(fileURL, newestFile)  # Downloads newest file is available or uses older file
 
 # File management - Clear out any other older files
 count = 0
@@ -285,11 +313,46 @@ excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
 # Get the correct sheet from the Excel file
 for theSheet in range(len(excel.sheetnames)):
     if excel.sheetnames[theSheet] == 'Table 1 - Cumulative cases':
-        excel.active = theSheet             # The active sheet is used to access the sheets data
+        excel.active = theSheet  # The active sheet is used to access the sheets data
 sheet = excel.active
 
 lastRowNum = sheet.max_row
 newestDate = sheet.cell(row=lastRowNum, column=1)  # Get the data of the most available row of data
 
-print(' ---- Scottish Covid Case Checker ---- ')
+# A message to display during certain CLI arguments
+intro = '\n---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid data and returns specific case numbers\n'
+
+# CLI Input handler
+# Uses argparse arguments to run a specific function
+if args.new is True:
+    # Returns the newest case numbers, 1 only shows the cases added since yesterdays data
+    print(intro)
+    outputData(getHealthBoardList(), getHealthBoardPeriod(1, 'all'))
+elif args.scotland is True:
+    print(intro)
+    print('Scotlands total cases')
+    outputData(getHealthBoardFullName('Scotland'), getScotlandTotal())
+elif args.area is not None:
+    print(intro)
+    area = getHealthBoardFullName(str(args.area[0]))  # Converts user inputted area into Excel formatted health board
+    print(area + 's total cases')
+    if area in getHealthBoardList():
+        outputData(area, getHealthBoardTotal(area))
+elif args.cases is not None:
+    # Takes the given area, converts to Excel formatted health board name and checks the given days from cases[0]
+    print(intro)
+    area = getHealthBoardFullName(str(args.cases[1]))
+    if area in getHealthBoardList():
+        outputData(area, getHealthBoardPeriod(args.cases[0], area))
+    # TODO: Currently cant handle 'all', this is an issue with getHealthBoardFullName,
+    #  as it currently looks for any evidence of the given string, rather than comparing word for word
+elif args.total is True:
+    # Prints all health boards and all of the total case numbers
+    print(intro)
+    print('Every health boards total case numbers')
+    outputData(getHealthBoardList(), getNewest())
+else:
+    # Invalid argument selected, showing the user -h
+    parser.print_help()
+
 # TODO: Is this needed? urllib.request.urlcleanup() - https://docs.python.org/3/library/urllib.request.html
