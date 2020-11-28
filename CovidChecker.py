@@ -144,7 +144,10 @@ def getScotlandTotal():
     :return: (str): The total cases in Scotland as a String
     """
     # Reads the last column of data, on the last row of data, and returns that cells value
-    return sheet.cell(row=lastRowNum, column=16).value
+    data = sheet.cell(row=lastRowNum, column=16).value
+    if type(data) is not int:
+        data = int(re.sub("[^0-9]", "", data))
+    return int(data)
 
 
 def getHealthBoardTotal(healthBoard):
@@ -155,7 +158,10 @@ def getHealthBoardTotal(healthBoard):
     """
     columnNum = getHealthBoardColumnNum(healthBoard)  # Gets the column number, for the given health board
     newData = getNewest()  # Stores all of the newest available total cases in a list
-    return newData[columnNum - 2]  # From the list of data, select the element from the given column num
+    data = newData[columnNum - 2]
+    if type(data) is not int:
+        data = int(re.sub("[^0-9]", "", data))
+    return data  # From the list of data, select the element from the given column num
 
 
 def getHealthBoardColumnNum(healthBoard):
