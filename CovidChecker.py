@@ -13,6 +13,7 @@ import sys
 import shutil
 from send2trash import send2trash
 import argparse
+import re
 
 
 # Functions
@@ -195,7 +196,11 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
         for col in range(2, 17):
             newCell = sheet.cell(row=lastRowNum, column=col).value
             olderCell = sheet.cell(row=lastRowNum - length, column=col).value
-            data = newCell - olderCell
+            if type(newCell) is not int:
+                newCell = int(re.sub("[^0-9]", "", newCell))
+            if type(olderCell) is not int:
+                olderCell = int(re.sub("[^0-9]", "", olderCell))
+            data = int(newCell) - int(olderCell)
             healthBoardList.append(data)
         return healthBoardList
     else:
