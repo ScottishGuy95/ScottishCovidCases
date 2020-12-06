@@ -1,1 +1,2 @@
 # covid-cases-checker
+test
