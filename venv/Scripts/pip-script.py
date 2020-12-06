@@ -1,4 +1,4 @@
-#!D:\Liam\Documents\Main_Documents\TestCode\Python\Mine\CovidCases\venv\Scripts\python.exe
+#!D:\Liam\Documents\Main_Documents\TestCode\Python\CovidChecker\venv\Scripts\python.exe
 # EASY-INSTALL-ENTRY-SCRIPT: 'pip==19.0.3','console_scripts','pip'
 __requires__ = 'pip==19.0.3'
 import re
