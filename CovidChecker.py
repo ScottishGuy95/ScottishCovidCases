@@ -187,14 +187,14 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
     # 39 was selected due to formatting in the Gov file
     # When cases were less than 5, as '*' was displayed, for disclosure reasons
     # So, to avoid a ValueError, 39 was the first row of data to not have an *
-    max = lastRowNum - 39
+    maxRow = lastRowNum - 39
     try:
         length = int(timePeriod)
-    except:
-        print('ERROR: You must give a number between 1 and ' + str(max) + '\nEnding Program.')
+    except ValueError:
+        print('ERROR: You must give a number between 1 and ' + str(maxRow) + '\nEnding Program.')
         sys.exit()
-    if int(length) < 1 or int(length) > max:
-        print('ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(max))
+    if int(length) < 1 or int(length) > maxRow:
+        print('ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(maxRow))
 
     if healthBoard == 'all':
         print('Getting all health boards cases over ' + str(length) + ' days')
