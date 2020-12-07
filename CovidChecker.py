@@ -271,8 +271,8 @@ parser = argparse.ArgumentParser(prog=os.path.basename(__file__), usage='%(prog)
                                              'and returns specific case numbers',
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 group = parser.add_mutually_exclusive_group()
-group.add_argument('-n', '--new', required=False, action='store_true', help="Expects health board name or "
-                                                                            "\'all\' for today's cases")
+group.add_argument('-n', '--new', required=False, action='store_true', help="Returns todays newest case numbers for "
+                                                                            "each health board")
 group.add_argument('-s', '--scotland', required=False, action='store_true',
                    help="Returns the Scottish total amount of cases")
 group.add_argument('-a', '--area', required=False, nargs=1, help="Expects a health board name, returns that health "
