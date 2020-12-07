@@ -326,7 +326,7 @@ while sheet.cell(row=lastEmptyRow, column=1).value is None:
 lastRowNum = lastEmptyRow
 
 # A message to display during certain CLI arguments
-intro = '\n---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid data and returns specific case numbers\n'
+intro = '\n---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid-19 cases and returns specific case numbers\n'
 
 # CLI Input handler
 # Uses argparse arguments to run a specific function

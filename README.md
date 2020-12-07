@@ -1,6 +1,7 @@
 # ScottishCovidCases.py
 Analyses Scottish Covid-19 case numbers and returns specific case numbers
 
+
 Data is taken from the Scottish Governments website here - [Data](https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/)
 ## Usage
 To download and use this script:
