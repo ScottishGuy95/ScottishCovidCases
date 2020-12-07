@@ -1,17 +1,20 @@
-# CovidChecker
-**CovidChecker.py** analyses Scottish covid case numbers and returns specific case numbers
+# ScottishCovidCases.py
+Analyses Scottish Covid-19 case numbers and returns specific case numbers
 
-Data is taken from the Scottish Goverments website here - [Data](https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/)
+Data is taken from the Scottish Governments website here - [Data](https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/)
 ## Usage
 To download and use this script:
 * Clone this repository
 * Once downloaded into your chosen directory
     * In terminal go to the chosen directory
-    * Install the virtual environment, type - pip install virtualenv
-    * To create your virtual environment, type - python -m venv venv
+    * Install the virtual environment, type: `pip install virtualenv`
+    * To create your virtual environment, type: `python -m venv venv`
+    * Activate the virtual environment, type: `.\venv\Scripts\activate.bat`
+    * Install required modules, type: `pip install -r requirements.txt`
+    * Run the script, type: `ScottishCovidCases.py -h`
     
 
-`CovidChecker.py *argument*`
+`ScottishCovidCases.py *argument*`
 
 Optional Arguments:
 ```

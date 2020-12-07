@@ -1,5 +1,5 @@
 #! python3
-# CovidChecker.py - A program to check the new coronavirus cases in Scotland
+# ScottishCovidCases.py - A program to check the new coronavirus cases in Scotland
 # Data is taken from - https://www.gov.scot/publications/coronavirus-covid-19-trends-in-daily-data/
 
 # Imports
