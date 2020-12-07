@@ -194,7 +194,8 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
         print('ERROR: You must give a number between 1 and ' + str(maxRow) + '\nEnding Program.')
         sys.exit()
     if int(length) < 1 or int(length) > maxRow:
-        print('ERROR: Given value is not valid for data available. Please enter a value between 1 and ' + str(maxRow))
+        print('ERROR: Given days value is not valid for the data available. Please enter a days value between 1 and ' + str(maxRow))
+        sys.exit()
 
     if healthBoard == 'all':
         print('Getting all health boards cases over ' + str(length) + ' days')
@@ -251,35 +252,54 @@ def getHealthBoardFullName(location):
                 if location.lower() == splitLocation[y].lower():
                     healthBoardNameFull = locationsList[x]
                     break
-            if healthBoardNameFull != '':   # Escapes the FOR loop, as there is now a health board name
+            if healthBoardNameFull != '':  # Escapes the FOR loop, as there is now a health board name
                 break
             # if location.lower() in locationsList[x].lower():  # If the given finds a match in the list of locations
             #     healthBoardNameFull = locationsList[x]  # Store that full health board name in a variable
             #     break
     if healthBoardNameFull == '':  # If there is no match, print error, print valid names and end
         print('Error - Invalid name given, please enter a name that matches one of the following:')
-        print(getHealthBoardList())  # Prints the health board names
+        print(healthBoards)  # Prints the health board names
         print('Ending program')
         sys.exit()  # Uses the sys package to end the program, as no valid name given
     elif healthBoardNameFull in locationsList:  # If there is a matching name in the location list, return as String
         return healthBoardNameFull
 
 
+def handleInput(theArea):
+    """
+    Takes the command line arguments health board name and returns the expected Health Board name
+    :param theArea: The command line arguments passed
+    :return: The Health board name, that matches the same name in hte Excel data
+    """
+    areaName = ''
+    for namePart in theArea:
+        if len(areaName) < 1:
+            if namePart != "&" and namePart != "NHS":
+                for x in getHealthBoardList():
+                    if namePart in x and namePart != "&" and namePart != "NHS":
+                        areaName = getHealthBoardFullName(str(namePart))
+                        return areaName
+        else:
+            return areaName
+
+
 # argparse variables
 parser = argparse.ArgumentParser(prog=os.path.basename(__file__), usage='%(prog)s [option]',
-                                 description='---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid data '
-                                             'and returns specific case numbers',
+                                 description='---- Scottish Covid Case Checker ---- \nAnalyses Scottish Covid-19 case '
+                                             'numbers and returns specific case numbers',
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-n', '--new', required=False, action='store_true', help="Returns todays newest case numbers for "
                                                                             "each health board")
 group.add_argument('-s', '--scotland', required=False, action='store_true',
                    help="Returns the Scottish total amount of cases")
-group.add_argument('-a', '--area', required=False, nargs=1, help="Expects a health board name, returns that health "
-                                                                 "boards total cases",
+group.add_argument('-a', '--area', required=False, nargs='*', help="Takes a health board name, returns that health "
+                                                                   "boards total cases",
                    metavar='HEALTHBOARD')
-group.add_argument('-c', '--cases', required=False, nargs=2, help="Expects a time period to check for cases and a "
-                                                                  "health board or \'all\' for all health boards",
+group.add_argument('-c', '--cases', required=False, nargs='*', help="Takes a number of days & a health board or "
+                                                                    "\'all\', returns the case numbers over that "
+                                                                    "period",
                    metavar=('DAYS', 'HEALTHBOARD'))
 group.add_argument('-t', '--total', required=False, action='store_true',
                    help="Returns all health boards total case numbers")
@@ -287,10 +307,14 @@ args = parser.parse_args()
 
 newestFile = formatFileName()  # Stores the expected file name from the website
 today = getFormattedDate()  # Gets the date in a URL format to add to the source file URL
-# The URL of where the most recent file will be
 fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/statistics/2020/04/coronavirus" \
           "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
           "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
+
+healthBoards = ['Ayrshire Arran', 'Borders', 'Dumfries Galloway', 'Fife', 'Forth Valley', 'Grampian'
+                                                                                          'Greater Glasgow Clyde',
+                'Highland', 'Lanarkshire', 'Lothian', 'Orkney', 'Shetland'
+                                                                'Tayside', 'Western Isles', 'Scotland']
 
 # Checks if their is a suitable directory to store the Excel files, if not, makes one
 if 'ExcelFiles' not in os.listdir(os.getcwd()):
@@ -301,12 +325,11 @@ if newestFile not in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
     downloadData(fileURL, newestFile)  # Downloads newest file is available or uses older file
     urllib.request.urlcleanup()
 
-# File management - Clear out any other older files
+# File management - Clear out any older Excel files
 count = 0
 for theFile in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
     if theFile != newestFile:
         count += 1
-        # print('need to bin this file: ' + str(os.getcwd() + '\\ExcelFiles\\' + theFile))
         send2trash(os.getcwd() + '\\ExcelFiles\\' + theFile)
 
 # Loads the most recent excel file, data_only used to ignore any formulas, as we only need the actual values
@@ -340,19 +363,34 @@ elif args.scotland is True:
     outputData(getHealthBoardFullName('Scotland'), getScotlandTotal())
 elif args.area is not None:
     print(intro)
-    area = getHealthBoardFullName(str(args.area[0]))  # Converts user inputted area into Excel formatted health board
-    print(area + 's total cases')
+    area = handleInput(args.area)
     if area in getHealthBoardList():
+        print(area + 's total cases')
         outputData(area, getHealthBoardTotal(area))
-elif args.cases is not None:
-    # Takes the given area, converts to Excel formatted health board name and checks the given days from cases[0]
-    print(intro)
-    if args.cases[1] != 'all':
-        area = getHealthBoardFullName(str(args.cases[1]))
-        outputData(area, getHealthBoardPeriod(args.cases[0], area))
     else:
-        area = 'all'
-        outputData(getHealthBoardList(), getHealthBoardPeriod(args.cases[0], 'all'))
+        print('Error - Invalid name given, please enter a name that matches one of the following:')
+        print(healthBoards)  # Prints the health board names
+        print('Ending program')
+    sys.exit()
+elif args.cases is not None:
+    # Takes the given area, converts to Excel formatted health board name and checks the the cases for the given days
+    print(intro)
+    try:
+        if args.cases[1] != 'all':
+            onlyArea = args.cases[1:]
+            area = handleInput(onlyArea)
+            if area in getHealthBoardList():
+                outputData(area, getHealthBoardPeriod(args.cases[0], area))
+            else:
+                print('Error - Invalid name given, please enter a name that matches one of the following:')
+                print(healthBoards)  # Prints the health board names
+                print('Ending program')
+        else:
+            area = 'all'
+            outputData(getHealthBoardList(), getHealthBoardPeriod(args.cases[0], 'all'))
+    except IndexError as e:
+        print('Error: Missing the health board name argument')
+        print('-c requires a number for days (e.g. 1, 7, 2) and a Health Board name or all')
 elif args.total is True:
     # Prints all health boards and all of the total case numbers
     print(intro)
