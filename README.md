@@ -22,8 +22,12 @@ Health Boards
 * Scotland
 
 ## Usage
+Requires python3.8 installed
 To download and use this script in Windows:
 * Clone this repository
+    * At the top of this page, select Green code button
+    * If you have `git` installed, select the https option
+    * Otherwise, download the Zip and extract
 * Once downloaded into your chosen directory
     * In CMD go to the chosen directory
     * Install the virtual environment, type: `pip install virtualenv`
