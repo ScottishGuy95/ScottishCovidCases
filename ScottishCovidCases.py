@@ -303,6 +303,8 @@ group.add_argument('-c', '--cases', required=False, nargs='*', help="Takes a num
                    metavar=('DAYS', 'HEALTHBOARD'))
 group.add_argument('-t', '--total', required=False, action='store_true',
                    help="Returns all health boards total case numbers")
+group.add_argument('-hb', '--healthboards', required=False, action='store_true',
+                   help="Returns all health boards available")
 args = parser.parse_args()
 
 newestFile = formatFileName()  # Stores the expected file name from the website
@@ -311,10 +313,7 @@ fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/s
           "-covid-19-trends-in-daily-data/documents/covid-19-data-by-nhs-board/covid-19-data-by-nhs-board/govscot" \
           "%3Adocument/COVID-19%2Bdaily%2Bdata%2B-%2Bby%2BNHS%2BBoard%2B-%2B" + today + ".xlsx?forceDownload=true "
 
-healthBoards = ['Ayrshire Arran', 'Borders', 'Dumfries Galloway', 'Fife', 'Forth Valley', 'Grampian'
-                                                                                          'Greater Glasgow Clyde',
-                'Highland', 'Lanarkshire', 'Lothian', 'Orkney', 'Shetland'
-                                                                'Tayside', 'Western Isles', 'Scotland']
+healthBoards = ['Ayrshire Arran', 'Borders', 'Dumfries Galloway', 'Fife', 'Forth Valley', 'Grampian', 'Greater Glasgow Clyde', 'Highland', 'Lanarkshire', 'Lothian', 'Orkney', 'Shetland', 'Tayside', 'Western Isles', 'Scotland']
 
 # Checks if their is a suitable directory to store the Excel files, if not, makes one
 if 'ExcelFiles' not in os.listdir(os.getcwd()):
@@ -396,6 +395,13 @@ elif args.total is True:
     print(intro)
     print('Every health boards total case numbers')
     outputData(getHealthBoardList(), getNewest())
+elif args.healthboards is True:
+    print(intro)
+    print('The following Health Boards can be used as arguments:')
+    # Outputs the health board list in an actual visual list
+    for hb in healthBoards:
+        print('* ', hb)
+    sys.exit()
 else:
     # Invalid argument selected, showing the user -h
     parser.print_help()

@@ -43,9 +43,14 @@ To download and use this script:
 * -a HEALTHBOARD        Takes a health board name, returns that health boards total cases
 * -c DAYS HEALTHBOARD   Takes a number of days & a health board or 'all', returns the case numbers over that period
 * -t                    Returns the total number of cases for every health board
+* -hb                   Returns all health boards available
 ```
 
 ## Examples
+Get a list of all available commands: `ScottishCovidCases.py -h`
+
+Get a list of all of the Health Boards you can use: `ScottishCovidCases.py -hb`
+
 Get today's newest case numbers: `ScottishCovidCases.py -n`
 
 Get the last 7 days of case numbers in NHS Highland: `ScottishCovidCases -c 7 Highland`
