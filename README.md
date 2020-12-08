@@ -23,6 +23,7 @@ Health Boards
 
 ## Usage
 Requires python3.8 installed
+
 To download and use this script in Windows:
 * Clone this repository
     * At the top of this page, select Green code button
