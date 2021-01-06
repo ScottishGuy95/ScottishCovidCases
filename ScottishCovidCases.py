@@ -346,7 +346,7 @@ for theFile in os.listdir(os.getcwd() + excelDir):
 if platform.system() == "Windows":
     excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
 else:
-    excel = load_workbook('ExcelFiles\\' + newestFile, data_only=True)
+    excel = load_workbook('ExcelFiles/' + newestFile, data_only=True)
 
 # Get the correct sheet from the Excel file
 for theSheet in range(len(excel.sheetnames)):
