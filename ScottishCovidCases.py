@@ -14,6 +14,7 @@ import shutil
 from send2trash import send2trash
 import argparse
 import re
+import platform
 
 
 # Functions
@@ -46,7 +47,12 @@ def downloadData(url, file):
     """
     # Check if a file with that name already exists, if not, download a fresh copy
     # Uses the os module to check the name of the file to download, against all the files in the ExcelFiles directory
-    if file in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
+    if platform.system() == "Windows":
+        dir = r"\\ExcelFiles\\"
+    else:
+        dir = '/ExcelFiles/'
+    print(os.getcwd() + dir)
+    if file in os.listdir(os.getcwd() + dir):
         print('A file with today\'s date already exists, using that.')
     else:
         try:
@@ -315,24 +321,32 @@ fileURL = "http://www.gov.scot/binaries/content/documents/govscot/publications/s
 
 healthBoards = ['Ayrshire Arran', 'Borders', 'Dumfries Galloway', 'Fife', 'Forth Valley', 'Grampian', 'Greater Glasgow Clyde', 'Highland', 'Lanarkshire', 'Lothian', 'Orkney', 'Shetland', 'Tayside', 'Western Isles', 'Scotland']
 
+if platform.system() == "Windows":
+    excelDir = "\\ExcelFiles\\"
+else:
+    excelDir = '/ExcelFiles/'
+
 # Checks if their is a suitable directory to store the Excel files, if not, makes one
 if 'ExcelFiles' not in os.listdir(os.getcwd()):
-    os.mkdir(os.getcwd() + '/ExcelFiles')
+    os.mkdir(os.getcwd() + excelDir)
 # A file with the most recent data does not already exist
-if newestFile not in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
+if newestFile not in os.listdir(os.getcwd() + excelDir):
     print('Local covid data is out of date - Downloading recent data.')
     downloadData(fileURL, newestFile)  # Downloads newest file is available or uses older file
     urllib.request.urlcleanup()
 
 # File management - Clear out any older Excel files
 count = 0
-for theFile in os.listdir(os.getcwd() + '\\ExcelFiles\\'):
+for theFile in os.listdir(os.getcwd() + excelDir):
     if theFile != newestFile:
         count += 1
-        send2trash(os.getcwd() + '\\ExcelFiles\\' + theFile)
+        send2trash(os.getcwd() + excelDir + theFile)
 
 # Loads the most recent excel file, data_only used to ignore any formulas, as we only need the actual values
-excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
+if platform.system() == "Windows":
+    excel = load_workbook('ExcelFiles//' + newestFile, data_only=True)
+else:
+    excel = load_workbook('ExcelFiles\\' + newestFile, data_only=True)
 
 # Get the correct sheet from the Excel file
 for theSheet in range(len(excel.sheetnames)):
