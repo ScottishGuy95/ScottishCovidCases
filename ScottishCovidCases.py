@@ -51,7 +51,6 @@ def downloadData(url, file):
         dir = r"\\ExcelFiles\\"
     else:
         dir = '/ExcelFiles/'
-    print(os.getcwd() + dir)
     if file in os.listdir(os.getcwd() + dir):
         print('A file with today\'s date already exists, using that.')
     else:
