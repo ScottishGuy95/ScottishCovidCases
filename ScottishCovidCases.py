@@ -349,7 +349,7 @@ else:
 
 # Get the correct sheet from the Excel file
 for theSheet in range(len(excel.sheetnames)):
-    if excel.sheetnames[theSheet] == 'Table 1 - Cumulative cases':
+    if excel.sheetnames[theSheet] == 'Table 1 - Cumulative PCR cases':
         excel.active = theSheet  # The active sheet is used to access the sheets data
 sheet = excel.active
 
