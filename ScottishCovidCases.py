@@ -208,11 +208,17 @@ def getHealthBoardPeriod(timePeriod, healthBoard='all'):
         for col in range(2, 17):
             newCell = sheet.cell(row=lastRowNum, column=col).value
             olderCell = sheet.cell(row=lastRowNum - length, column=col).value
-            # Check if value is none, if so, set as 0 to avoid affecting the total cases
+            # Check if value is none, if so, go back until the row has an actual value
             if newCell is None:
-                newCell = 0
+                count = 0
+                while newCell is None:
+                    count += 1
+                    newCell = sheet.cell(row=lastRowNum-count, column=col).value
             if olderCell is None:
-                olderCell = 0
+                count = 0
+                while olderCell is None:
+                    count += 1
+                    olderCell = sheet.cell(row=lastRowNum - length - count, column=col).value
             if type(newCell) is not int:
                 newCell = int(re.sub("[^0-9]", "", newCell))
             if type(olderCell) is not int:
