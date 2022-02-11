@@ -359,10 +359,11 @@ else:
     excel = load_workbook('ExcelFiles/' + newestFile, data_only=True)
 
 # Get the correct sheet from the Excel file
-for theSheet in range(len(excel.sheetnames)):
-    if excel.sheetnames[theSheet] == 'Table 1 - Cumulative PCR cases':
-        excel.active = theSheet  # The active sheet is used to access the sheets data
-sheet = excel.active
+# for theSheet in range(len(excel.sheetnames)):
+#     if excel.sheetnames[theSheet] == 'Table 1 - Cumulative cases':
+#         excel.active = theSheet  # The active sheet is used to access the sheets data
+# sheet = excel.active
+sheet = excel.worksheets[2]
 
 # Sometimes the sheet comes back with the last row, as the one after the last line of actual data
 # So, instead of using sheet.max_row, loop from the last row, until the first row of actual data, store that row number
